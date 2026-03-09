@@ -155,28 +155,25 @@ def get_image_transform_resize_crop(
     return transform
 
 
-def intrinsic_transform_resize(intrinsic, input_res, output_resize_res, output_crop_res):
-
+def intrinsic_transform_resize(K, input_res, output_resize_res, output_crop_res):
     iw, ih = input_res
     ow, oh = output_resize_res
-    rw, rh = None, None
-    if (iw/ih) >= (ow/oh):
-        # input is wider
+
+    if iw / ih >= ow / oh:
         rh = oh
         rw = math.ceil(rh / ih * iw)
     else:
         rw = ow
         rh = math.ceil(rw / iw * ih)
-    
-    intrinsic[0] = intrinsic[0] * rw / ow 
-    intrinsic[1] = intrinsic[1] * rh / oh
+
+    K = K.copy().astype(float)
+    K[0, :] *= rw / iw
+    K[1, :] *= rh / ih
 
     cw, ch = output_crop_res
-    intrinsic[0, 2] = intrinsic[0, 2] - (rw - cw) / 2
-    intrinsic[1, 2] = intrinsic[1, 2] - (rh - ch) / 2
-
-    return intrinsic
-
+    K[0, 2] -= (rw - cw) / 2
+    K[1, 2] -= (rh - ch) / 2
+    return K
 
 
 def get_image_transform_param(
